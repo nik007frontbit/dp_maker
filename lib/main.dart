@@ -1,8 +1,24 @@
+import 'dart:convert';
+
 import 'package:dp_maker/screens/home.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
-void main() {
+List dataFrames = [];
+
+loader() async {
+  String jsonString = await rootBundle.loadString('assets/json/contents.json');
+
+  var data = await json.decode(jsonString);
+  dataFrames = data['data'];
+
+  // data.shuffle();
+  // print(data);
+}
+
+Future<void> main() async {
+  await loader();
   runApp(const MyApp());
 }
 
@@ -13,7 +29,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
-      title: 'Flutter Demo',
+      title: 'Dp Generator',
       theme: ThemeData(
         // This is the theme of your application.
         //
@@ -37,5 +53,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
-
