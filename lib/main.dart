@@ -8,7 +8,7 @@ import 'package:get/get.dart';
 List dataFrames = [];
 
 loader() async {
-  String jsonString = await rootBundle.loadString('assets/json/contents.json');
+  String jsonString = await rootBundle.loadString('asset/json/frames.json');
 
   var data = await json.decode(jsonString);
   dataFrames = data['data'];
@@ -18,6 +18,7 @@ loader() async {
 }
 
 Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await loader();
   runApp(const MyApp());
 }

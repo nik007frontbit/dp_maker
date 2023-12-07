@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 
@@ -10,7 +11,10 @@ import 'package:image_picker/image_picker.dart';
 import 'package:screenshot/screenshot.dart';
 
 class DpDownloadPage extends StatefulWidget {
-  const DpDownloadPage({super.key});
+  RxInt indexImage;
+  List images;
+
+  DpDownloadPage({super.key, required this.indexImage, required this.images});
 
   @override
   State<DpDownloadPage> createState() => _DpDownloadPageState();
@@ -20,6 +24,7 @@ class _DpDownloadPageState extends State<DpDownloadPage> {
   File? selectedImage;
   final GlobalKey genKey = GlobalKey();
   final ScreenshotController screenshotController = ScreenshotController();
+  RxBool imageChange = false.obs;
 
   @override
   Widget build(BuildContext context) {
@@ -33,37 +38,56 @@ class _DpDownloadPageState extends State<DpDownloadPage> {
             padding: const EdgeInsets.all(45.0),
             child: Screenshot(
               controller: screenshotController,
-              child: Container(
-                width: MediaQuery.of(context).size.width * .8,
-                height: MediaQuery.of(context).size.width * .8,
-                constraints: BoxConstraints.tight(Size(
-                    MediaQuery.of(context).size.width * .8,
-                    MediaQuery.of(context).size.width * .8)),
-                decoration: const BoxDecoration(shape: BoxShape.circle),
+              child: ClipOval(
                 child: Stack(
                   fit: StackFit.loose,
                   alignment: Alignment.center,
                   children: [
+                    Obx(
+                      () => imageChange.isTrue
+                          ? ClipOval(
+                              child: Image.network(
+                                "${widget.images[widget.indexImage.value]['preview']}",
+                                width: MediaQuery.of(context).size.width * .8,
+                                height: MediaQuery.of(context).size.width * .8,
+                              ),
+                            )
+                          : const SizedBox(),
+                    ),
                     selectedImage != null
                         ? ClipOval(
-                            child: Image.file(
-                              selectedImage!,
-                              width: MediaQuery.of(context).size.width * .68,
-                              height: MediaQuery.of(context).size.width * .68,
-                              fit: BoxFit.cover,
+                            child: InteractiveViewer(
+                              child: Image.file(
+                                selectedImage!,
+                                width: MediaQuery.of(context).size.width * .79,
+                                height: MediaQuery.of(context).size.width * .79,
+                                fit: BoxFit.cover,
+                              ),
                             ),
                           )
                         : const SizedBox(),
-                    ClipOval(
-                      child: Image.asset(
-                        "asset/images/home/4.png",
-                        width: MediaQuery.of(context).size.width * .8,
-                        height: MediaQuery.of(context).size.width * .8,
-                      ),
-                    ),
+                    Obx(
+                      () => imageChange.isFalse
+                          ? ClipOval(
+                              child: Image.network(
+                                "${widget.images[widget.indexImage.value]['preview']}",
+                                width: MediaQuery.of(context).size.width * .8,
+                                height: MediaQuery.of(context).size.width * .8,
+                              ),
+                            )
+                          : const SizedBox(),
+                    )
                   ],
                 ),
               ),
+            ),
+          ),
+          Obx(
+            () => CupertinoSwitch(
+              value: imageChange.value,
+              onChanged: (value) {
+                imageChange.value = value;
+              },
             ),
           ),
           GestureDetector(
@@ -109,13 +133,36 @@ class _DpDownloadPageState extends State<DpDownloadPage> {
                 ),
               ],
             ),
-          )
+          ),
         ],
+      ),
+      bottomNavigationBar: Container(
+        color: Colors.white,
+        height: 65,
+        child: ListView.builder(
+          scrollDirection: Axis.horizontal,
+          itemCount: widget.images.length,
+          itemBuilder: (context, index) {
+            // widget.indexImage.value = index;
+            return GestureDetector(
+              onTap: () => widget.indexImage.value = index,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: Image.network(
+                  "${widget.images[index]['preview']}",
+                  width: 60,
+                  height: 60,
+                ),
+              ),
+            );
+          },
+        ),
       ),
     );
   }
 
   Future<void> takePicture() async {
+    imageChange.value = false;
     try {
       Uint8List? imageBytes = await screenshotController.capture();
       Directory directory =
