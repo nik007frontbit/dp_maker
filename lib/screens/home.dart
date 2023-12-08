@@ -3,6 +3,8 @@ import 'package:dp_maker/utils/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import 'caption/caption_images.dart';
+
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
@@ -35,6 +37,7 @@ class HomePage extends StatelessWidget {
                   child: pagesIcon(
                     height: 100,
                     image: "asset/images/home/cap.png",
+                    ontap: () => Get.to(CaptionImagesShow()),
                   ),
                 ),
               ],

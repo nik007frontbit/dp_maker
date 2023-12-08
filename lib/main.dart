@@ -6,12 +6,17 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
 List dataFrames = [];
+List dataImages = [];
 
 loader() async {
   String jsonString = await rootBundle.loadString('asset/json/frames.json');
+  String jsonList =
+      await rootBundle.loadString('asset/json/caption_images.json');
 
   var data = await json.decode(jsonString);
+  var dataImg = await json.decode(jsonList);
   dataFrames = data['data'];
+  dataImages = dataImg;
 
   // data.shuffle();
   // print(data);

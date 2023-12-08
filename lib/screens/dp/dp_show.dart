@@ -30,19 +30,22 @@ class DpShowList extends StatelessWidget {
                       )
                     ],
                   ),
-                  child: SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          dataFrames[index]['cat_name'],
-                          style: const TextStyle(
-                            fontSize: 20,
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w500,
-                          ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        dataFrames[index]['cat_name'],
+                        style: const TextStyle(
+                          fontSize: 20,
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w500,
                         ),
-                        GridView.builder(
+                      ),
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      Expanded(
+                        child: GridView.builder(
                             physics: const BouncingScrollPhysics(),
                             shrinkWrap: true,
                             itemCount: dataFrames[index]['image'].length,
@@ -63,9 +66,9 @@ class DpShowList extends StatelessWidget {
                                   "${dataFrames[index]['image'][i]['preview']}",
                                 ),
                               );
-                            })
-                      ],
-                    ),
+                            }),
+                      )
+                    ],
                   ),
                 );
               },
