@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
@@ -43,6 +44,7 @@ class _ImageEditorExampleState extends State<ImageEditorExample> {
         (await NetworkAssetBundle(Uri.parse(widget.image)).load(widget.image))
             .buffer
             .asUint8List();
+    controller.imageData.value = bytes!;
     print(bytes);
   }
 
@@ -105,17 +107,24 @@ class _ImageEditorExampleState extends State<ImageEditorExample> {
         child: Column(
           mainAxisSize: MainAxisSize.max,
           children: [
-            Expanded(
-                child: Padding(
-              padding: const EdgeInsets.all(10.0),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: Image.network(
-                  widget.image,
-                  fit: BoxFit.cover,
-                ),
-              ),
-            )),
+            Obx(
+              () => controller.imageData.value.isNotEmpty
+                  ? Expanded(
+                      child: Padding(
+                      padding: const EdgeInsets.all(10.0),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: Image.memory(
+                          controller.imageData.value,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ))
+                  : Expanded(
+                      child: Container(
+                      color: Colors.grey.withOpacity(0.2),
+                    )),
+            ),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
@@ -135,20 +144,13 @@ class _ImageEditorExampleState extends State<ImageEditorExample> {
                   ),
                   onTap: () async {
                     // Check if imageData is not null before editing.
-                    var editedImage = await Navigator.push(
-                      context,
-                      CupertinoPageRoute(
-                        builder: (context) => ImageEditor(
-                          image: bytes,
-                        ),
-                      ),
-                    );
+
                     if (controller.imageData.value.isNotEmpty) {
                       var editedImage = await Navigator.push(
                         context,
                         CupertinoPageRoute(
                           builder: (context) => ImageEditor(
-                            image: widget.image,
+                            image: controller.imageData.value,
                           ),
                         ),
                       );
@@ -166,7 +168,7 @@ class _ImageEditorExampleState extends State<ImageEditorExample> {
                   },
                 ),
                 GestureDetector(
-                  onTap: () => controller.selected.value = "",
+                  onTap: () => controller.imageData.value = bytes!,
                   child: Image.asset(
                     "asset/images/quote/delete.png",
                     height: 90,
@@ -182,7 +184,7 @@ class _ImageEditorExampleState extends State<ImageEditorExample> {
   }
 
   void _download(Uint8List imageData) async {
-    /* String uniqueFileName = '${DateTime.now().millisecondsSinceEpoch}.png';
+    String uniqueFileName = '${DateTime.now().millisecondsSinceEpoch}.png';
     final image = img.decodeImage(imageData);
     if (image == null) {
       // Handle the case where the decoding failed
@@ -196,7 +198,7 @@ class _ImageEditorExampleState extends State<ImageEditorExample> {
 
     // Define a unique filename for the saved image
 
-    final appFolder = Directory('${dir.path}/$pageName');
+    final appFolder = Directory('${dir.path}/caption_images');
     if (!await appFolder.exists()) {
       appFolder.createSync();
     }
@@ -212,12 +214,11 @@ class _ImageEditorExampleState extends State<ImageEditorExample> {
         snackPosition: SnackPosition.BOTTOM,
       );
     } catch (e) {
-      Loader().cancelLoading();
       Get.snackbar(
         'Error',
         'Failed to download and save image.',
         snackPosition: SnackPosition.BOTTOM,
       );
-    }*/
+    }
   }
 }

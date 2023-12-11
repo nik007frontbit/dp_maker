@@ -1,9 +1,11 @@
 import 'package:dp_maker/screens/dp/dp_show.dart';
+import 'package:dp_maker/screens/web_view/wa_launch.dart';
 import 'package:dp_maker/utils/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'caption/caption_images.dart';
+import 'genrate_link/generate_link.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -43,10 +45,21 @@ class HomePage extends StatelessWidget {
               ],
             ),
             pagesIcon(
+              ontap: () => Get.to(GenerateLink(
+                isDirect: false,
+              )),
               height: 70,
               image: "asset/images/home/genLink.png",
             ),
             pagesIcon(
+              ontap: () => Get.to(GenerateLink(
+                isDirect: true,
+              )),
+              height: 70,
+              image: "asset/images/home/genLink.png",
+            ),
+            pagesIcon(
+              ontap: () => Get.to(WebViewLoad(title: "Whatsapp web", url: "https://web.whatsapp.com/")),
               height: 70,
               image: "asset/images/home/waWeb.png",
             ),

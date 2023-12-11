@@ -21,7 +21,7 @@ class DpDownloadPage extends StatefulWidget {
 }
 
 class _DpDownloadPageState extends State<DpDownloadPage> {
-  File? selectedImage;
+  RxString selectedImage = ''.obs;
   final GlobalKey genKey = GlobalKey();
   final ScreenshotController screenshotController = ScreenshotController();
   RxBool imageChange = false.obs;
@@ -54,18 +54,18 @@ class _DpDownloadPageState extends State<DpDownloadPage> {
                             )
                           : const SizedBox(),
                     ),
-                    selectedImage != null
+                    Obx(() => selectedImage.value != ""
                         ? ClipOval(
                             child: InteractiveViewer(
                               child: Image.file(
-                                selectedImage!,
+                                File(selectedImage!.value),
                                 width: MediaQuery.of(context).size.width * .79,
                                 height: MediaQuery.of(context).size.width * .79,
                                 fit: BoxFit.cover,
                               ),
                             ),
                           )
-                        : const SizedBox(),
+                        : const SizedBox()),
                     Obx(
                       () => imageChange.isFalse
                           ? ClipOval(
@@ -82,14 +82,6 @@ class _DpDownloadPageState extends State<DpDownloadPage> {
               ),
             ),
           ),
-          Obx(
-            () => CupertinoSwitch(
-              value: imageChange.value,
-              onChanged: (value) {
-                imageChange.value = value;
-              },
-            ),
-          ),
           GestureDetector(
             onTap: () async {
               final picker = ImagePicker();
@@ -97,25 +89,59 @@ class _DpDownloadPageState extends State<DpDownloadPage> {
                   await picker.pickImage(source: ImageSource.gallery);
 
               if (pickedFile != null) {
-                setState(() {
-                  selectedImage = File(pickedFile.path);
-                });
+                selectedImage.value = pickedFile.path;
               }
             },
             child: Container(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 30),
               margin: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                shape: BoxShape.circle,
+                borderRadius: BorderRadius.circular(40),
                 border: Border.all(
                   color: AppColors.primary,
                 ),
               ),
-              child: const Icon(
-                Icons.add,
-                color: AppColors.primary,
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.add,
+                    color: AppColors.primary,
+                  ),
+                  SizedBox(
+                    width: 10,
+                  ),
+                  Text("Add Image From Gallary",
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 18,
+                        color: AppColors.primary,
+                      )),
+                ],
               ),
             ),
+          ),
+          Obx(
+            () => selectedImage.value != ""
+                ? Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text("Edit Mode",
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 18,
+                            color: AppColors.primary,
+                          )),
+                      CupertinoSwitch(
+                        value: imageChange.value,
+                        onChanged: (value) {
+                          imageChange.value = value;
+                        },
+                        activeColor: AppColors.primary,
+                      ),
+                    ],
+                  )
+                : SizedBox(),
           ),
           Padding(
             padding: EdgeInsets.symmetric(
@@ -138,7 +164,7 @@ class _DpDownloadPageState extends State<DpDownloadPage> {
       ),
       bottomNavigationBar: Container(
         color: Colors.white,
-        height: 65,
+        height: MediaQuery.of(context).size.height * .1,
         child: ListView.builder(
           scrollDirection: Axis.horizontal,
           itemCount: widget.images.length,
@@ -150,8 +176,8 @@ class _DpDownloadPageState extends State<DpDownloadPage> {
                 padding: const EdgeInsets.symmetric(horizontal: 8.0),
                 child: Image.network(
                   "${widget.images[index]['preview']}",
-                  width: 60,
-                  height: 60,
+                  width: MediaQuery.of(context).size.height * .08,
+                  height: MediaQuery.of(context).size.height * .08,
                 ),
               ),
             );

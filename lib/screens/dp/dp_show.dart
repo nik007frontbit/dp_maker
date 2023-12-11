@@ -1,3 +1,4 @@
+import 'package:card_swiper/card_swiper.dart';
 import 'package:dp_maker/main.dart';
 import 'package:dp_maker/screens/dp/dp_download.dart';
 import 'package:dp_maker/utils/colors.dart';
@@ -14,19 +15,30 @@ class DpShowList extends StatelessWidget {
       body: Column(
         children: [
           Expanded(
-            child: PageView.builder(
+            child: Swiper(
+              viewportFraction: 0.85,
+              scale: 0.95,
               itemCount: dataFrames.length,
               itemBuilder: (context, index) {
                 var data = dataFrames[index]['cat_name'];
                 return Container(
-                  margin: const EdgeInsets.all(30),
+                  width: MediaQuery.of(context).size.width * .6,
+                  margin: const EdgeInsets.only(
+                    right: 10,
+                    left: 10,
+                    bottom: 20,
+                    top: 20,
+                  ),
                   padding: const EdgeInsets.all(20),
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.all(Radius.circular(20)),
+                    borderRadius: const BorderRadius.all(
+                      Radius.circular(20),
+                    ),
                     boxShadow: [
                       BoxShadow(
-                        blurRadius: 20,
+                        blurRadius: 10,
+                        color: Colors.black.withOpacity(0.5),
                       )
                     ],
                   ),
@@ -62,8 +74,11 @@ class DpShowList extends StatelessWidget {
                                       indexImage: i.obs,
                                       images: dataFrames[index]['image'],
                                     )),
-                                child: Image.network(
-                                  "${dataFrames[index]['image'][i]['preview']}",
+                                child: Container(
+                                  color: Colors.grey.withOpacity(0.2),
+                                  child: Image.network(
+                                    "${dataFrames[index]['image'][i]['preview']}",
+                                  ),
                                 ),
                               );
                             }),
