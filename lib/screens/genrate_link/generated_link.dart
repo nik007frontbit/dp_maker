@@ -2,11 +2,13 @@ import 'dart:io';
 
 import 'package:dp_maker/utils/colors.dart';
 import 'package:dp_maker/utils/share.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:screenshot/screenshot.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class GeneratedLink extends StatelessWidget {
   String phone;
@@ -17,7 +19,25 @@ class GeneratedLink extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(
+        title: const Text(
+          "Link Generated",
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        actions: [
+          GestureDetector(
+            onTap: () => launchUrl(Uri.parse("http://1376.go.qureka.com")),
+            child: const Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Icon(
+                CupertinoIcons.gift_fill,
+              ),
+            ),
+          )
+        ],
+      ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
@@ -155,7 +175,23 @@ class QrCodeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('QR Code'),
+        title: const Text(
+          "QR Code",
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        actions: [
+          GestureDetector(
+            onTap: () => launchUrl(Uri.parse("http://1376.go.qureka.com")),
+            child: const Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Icon(
+                CupertinoIcons.gift_fill,
+              ),
+            ),
+          )
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),

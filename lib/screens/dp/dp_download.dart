@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:dp_maker/utils/share.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -7,8 +8,13 @@ import 'package:flutter/services.dart';
 import 'package:dp_maker/utils/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:screenshot/screenshot.dart';
+import 'package:shimmer/shimmer.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+import '../../ads/ads_manager.dart';
 
 class DpDownloadPage extends StatefulWidget {
   RxInt indexImage;
@@ -25,142 +31,300 @@ class _DpDownloadPageState extends State<DpDownloadPage> {
   final GlobalKey genKey = GlobalKey();
   final ScreenshotController screenshotController = ScreenshotController();
   RxBool imageChange = false.obs;
+  NativeAd? nativeAd;
+  RxBool nativeAdIsLoaded = false.obs; //testing
+
+  void loadNativeAd() {
+    nativeAd = NativeAd(
+        adUnitId: ApiUrl.nativeId,
+        listener: NativeAdListener(
+          onAdLoaded: (ad) {
+            debugPrint('👍👍👍👍👍$NativeAd loaded. 👍👍👍👍👍');
+            nativeAdIsLoaded.value = true;
+          },
+          onAdFailedToLoad: (ad, error) {
+            debugPrint('🔔🔔🔔🔔$ad failed to load: $error🔔🔔🔔🔔');
+            nativeAdIsLoaded.value = false;
+            ad.dispose();
+            nativeAd!.dispose();
+          },
+        ),
+        request: const AdRequest(),
+        // Styling...
+        nativeTemplateStyle: NativeTemplateStyle(
+          callToActionTextStyle: NativeTemplateTextStyle(
+            textColor: Colors.white,
+            backgroundColor: AppColors.primary,
+            style: NativeTemplateFontStyle.monospace,
+            size: 16.0,
+          ),
+          // Required: Choose a template.
+          templateType: TemplateType.medium,
+        ))
+      ..load();
+
+    nativeAd!.load();
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    loadNativeAd();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(45.0),
-            child: Screenshot(
-              controller: screenshotController,
-              child: ClipOval(
-                child: Stack(
-                  fit: StackFit.loose,
-                  alignment: Alignment.center,
+      appBar: AppBar(
+        title: const Text("Create Your DP",
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+            )),
+        actions: [
+          GestureDetector(
+            onTap: () => launchUrl(Uri.parse("http://1376.go.qureka.com")),
+            child: const Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Icon(
+                CupertinoIcons.gift_fill,
+              ),
+            ),
+          )
+        ],
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            Obx(() {
+              if (nativeAdIsLoaded.value) {
+                return SizedBox(
+                  height: 72,
+                  child: AdWidget(ad: nativeAd!),
+                );
+              } else {
+                return Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Obx(
-                      () => imageChange.isTrue
-                          ? ClipOval(
-                              child: Image.network(
-                                "${widget.images[widget.indexImage.value]['preview']}",
-                                width: MediaQuery.of(context).size.width * .8,
-                                height: MediaQuery.of(context).size.width * .8,
-                              ),
-                            )
-                          : const SizedBox(),
+                    Shimmer.fromColors(
+                      baseColor: Colors.grey[300]!,
+                      highlightColor: Colors.grey[100]!,
+                      child: Container(
+                        width: double.infinity,
+                        height: 72,
+                        color: Colors.white,
+                      ),
                     ),
-                    Obx(() => selectedImage.value != ""
-                        ? ClipOval(
-                            child: InteractiveViewer(
-                              child: Image.file(
-                                File(selectedImage!.value),
-                                width: MediaQuery.of(context).size.width * .79,
-                                height: MediaQuery.of(context).size.width * .79,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          )
-                        : const SizedBox()),
-                    Obx(
-                      () => imageChange.isFalse
+                    /*
+                SizedBox(height: 20),
+                Text(
+                  'Fetching an interesting ad for you...',
+                  style: TextStyle(fontSize: 16),
+                ),*/
+                  ],
+                );
+              }
+            }),
+            Padding(
+              padding: const EdgeInsets.all(45.0),
+              child: Screenshot(
+                controller: screenshotController,
+                child: ClipOval(
+                  child: Stack(
+                    fit: StackFit.loose,
+                    alignment: Alignment.center,
+                    children: [
+                      Obx(
+                        () => imageChange.isTrue
+                            ? ClipOval(
+                                child: Image.network(
+                                  "${widget.images[widget.indexImage.value]['preview']}",
+                                  width: MediaQuery.of(context).size.width * .8,
+                                  height:
+                                      MediaQuery.of(context).size.width * .8,
+                                ),
+                              )
+                            : const SizedBox(),
+                      ),
+                      Obx(() => selectedImage.value != ""
                           ? ClipOval(
-                              child: Image.network(
-                                "${widget.images[widget.indexImage.value]['preview']}",
-                                width: MediaQuery.of(context).size.width * .8,
-                                height: MediaQuery.of(context).size.width * .8,
+                              child: InteractiveViewer(
+                                child: Image.file(
+                                  File(selectedImage!.value),
+                                  width:
+                                      MediaQuery.of(context).size.width * .79,
+                                  height:
+                                      MediaQuery.of(context).size.width * .79,
+                                  fit: BoxFit.cover,
+                                ),
                               ),
                             )
-                          : const SizedBox(),
-                    )
+                          : const SizedBox()),
+                      Obx(
+                        () => imageChange.isFalse
+                            ? ClipOval(
+                                child: Image.network(
+                                  "${widget.images[widget.indexImage.value]['preview']}",
+                                  width: MediaQuery.of(context).size.width * .8,
+                                  height:
+                                      MediaQuery.of(context).size.width * .8,
+                                ),
+                              )
+                            : const SizedBox(),
+                      )
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            GestureDetector(
+              onTap: () async {
+                final picker = ImagePicker();
+                final pickedFile =
+                    await picker.pickImage(source: ImageSource.gallery);
+
+                if (pickedFile != null) {
+                  selectedImage.value = pickedFile.path;
+                }
+              },
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 10, horizontal: 30),
+                margin: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(40),
+                  border: Border.all(
+                    color: AppColors.primary,
+                  ),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.add,
+                      color: AppColors.primary,
+                    ),
+                    SizedBox(
+                      width: 10,
+                    ),
+                    Text("Add Image From Gallary",
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 18,
+                          color: AppColors.primary,
+                        )),
                   ],
                 ),
               ),
             ),
-          ),
-          GestureDetector(
-            onTap: () async {
-              final picker = ImagePicker();
-              final pickedFile =
-                  await picker.pickImage(source: ImageSource.gallery);
-
-              if (pickedFile != null) {
-                selectedImage.value = pickedFile.path;
-              }
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 30),
-              margin: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(40),
-                border: Border.all(
-                  color: AppColors.primary,
-                ),
-              ),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
+            Obx(
+              () => selectedImage.value != ""
+                  ? Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text("Edit Mode",
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 18,
+                              color: AppColors.primary,
+                            )),
+                        const SizedBox(
+                          width: 10,
+                        ),
+                        CupertinoSwitch(
+                          value: imageChange.value,
+                          onChanged: (value) {
+                            imageChange.value = value;
+                          },
+                          activeColor: AppColors.primary,
+                        ),
+                      ],
+                    )
+                  : const SizedBox(),
+            ),
+            SizedBox(
+              height: MediaQuery.of(context).size.width * .15,
+            ),
+            Padding(
+              padding: EdgeInsets.symmetric(
+                  horizontal: MediaQuery.of(context).size.width * .15),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  Icon(
-                    Icons.add,
-                    color: AppColors.primary,
+                  GestureDetector(
+                    onTap: () => ShareData.shareApp(),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 10, horizontal: 30),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(40),
+                        border: Border.all(
+                          color: AppColors.primary,
+                        ),
+                      ),
+                      child: const Row(
+                        children: [
+                          Icon(
+                            Icons.share,
+                            color: AppColors.primary,
+                          ),
+                          SizedBox(
+                            width: 10,
+                          ),
+                          Text(
+                            "Share",
+                            style: TextStyle(
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.primary,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                  SizedBox(
-                    width: 10,
+                  GestureDetector(
+                    onTap: () => takePicture(),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 10, horizontal: 30),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(40),
+                        border: Border.all(
+                          color: AppColors.primary,
+                        ),
+                      ),
+                      child: const Row(
+                        children: [
+                          Icon(
+                            Icons.arrow_downward,
+                            color: AppColors.primary,
+                          ),
+                          SizedBox(
+                            width: 10,
+                          ),
+                          Text(
+                            "Save",
+                            style: TextStyle(
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.primary,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                  Text("Add Image From Gallary",
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 18,
-                        color: AppColors.primary,
-                      )),
                 ],
               ),
             ),
-          ),
-          Obx(
-            () => selectedImage.value != ""
-                ? Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text("Edit Mode",
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 18,
-                            color: AppColors.primary,
-                          )),
-                      CupertinoSwitch(
-                        value: imageChange.value,
-                        onChanged: (value) {
-                          imageChange.value = value;
-                        },
-                        activeColor: AppColors.primary,
-                      ),
-                    ],
-                  )
-                : SizedBox(),
-          ),
-          Padding(
-            padding: EdgeInsets.symmetric(
-                horizontal: MediaQuery.of(context).size.width * .15),
-            child: Row(
-              children: [
-                Expanded(child: Image.asset("asset/images/home/share.png")),
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => takePicture(),
-                    child: Image.asset(
-                      "asset/images/home/Save.png",
-                    ),
-                  ),
-                ),
-              ],
+            const SizedBox(
+              height: 20,
             ),
-          ),
-        ],
+          ],
+        ),
       ),
       bottomNavigationBar: Container(
         color: Colors.white,

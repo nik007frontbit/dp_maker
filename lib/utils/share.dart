@@ -7,15 +7,15 @@ class ShareData {
 
   static shareApp({BuildContext? context}) async {
     const url =
-        'https://play.google.com/store/apps/details?id=com.quotes_world.quotes.best.popular.quotes_world';
+        'https://play.google.com/store/apps/details?id=com.dpmaker.profile.photo';
     await Share.share(
-        "Download Life Quotes Application, These are the Best Life Quotes and statuses for you.. \n$url",
+        "DP Maker - Profile Photo Maker is very useful for build your profile picture unique from others, when you use profile border maker for edit your profile picture you see 100+ profile border. You can download frame with your photo and share to link with your friends... \n$url",
         subject: "Share App");
   }
 
   static rateUS() async {
     const url =
-        'https://play.google.com/store/apps/details?id=com.quotes_world.quotes.best.popular.quotes_world';
+        'https://play.google.com/store/apps/details?id=com.dpmaker.profile.photo';
     if (await canLaunchUrl(Uri.parse(url))) {
       await launchUrl(Uri.parse(url));
     } else {
@@ -42,7 +42,7 @@ class ShareData {
   }
 
   static shareLink({BuildContext? context, required String link}) async {
-    // const url = 'https://play.google.com/store/apps/details?id=com.quotes_world.quotes.best.popular.quotes_world';
+    // const url = 'https://play.google.com/store/apps/details?id=com.dpmaker.profile.photo';
     await Share.share("$link", subject: "Share Link");
   }
 }

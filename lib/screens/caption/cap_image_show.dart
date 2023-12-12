@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
 
@@ -10,6 +9,7 @@ import 'package:get/get.dart';
 import 'package:image/image.dart' as img;
 import 'package:image_editor_plus/image_editor_plus.dart';
 import 'package:path/path.dart' as path;
+import 'package:url_launcher/url_launcher.dart';
 
 class CaptionSelectedImage extends StatelessWidget {
   const CaptionSelectedImage({super.key});
@@ -101,7 +101,25 @@ class _ImageEditorExampleState extends State<ImageEditorExample> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(
+        title: const Text(
+          "Image & Caption",
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        actions: [
+          GestureDetector(
+            onTap: () => launchUrl(Uri.parse("http://1376.go.qureka.com")),
+            child: const Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Icon(
+                CupertinoIcons.gift_fill,
+              ),
+            ),
+          )
+        ],
+      ),
       body: Container(
         constraints: const BoxConstraints.expand(),
         child: Column(

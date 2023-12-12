@@ -1,9 +1,15 @@
 import 'dart:convert';
 
 import 'package:dp_maker/screens/home.dart';
+import 'package:dp_maker/utils/colors.dart';
+import 'package:dp_maker/utils/share.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+import 'ads/ads_manager.dart';
 
 List dataFrames = [];
 List dataImages = [];
@@ -30,7 +36,12 @@ Future<void> main() async {
       DeviceOrientation.portraitUp,
     ],
   );
+
+  await MobileAds.instance.initialize();
+
+  AdsManager.loadAppOpenAd();
   await loader();
+
   runApp(const MyApp());
 }
 
@@ -58,10 +69,141 @@ class MyApp extends StatelessWidget {
         //
         // This works for code too, not just values: Most code changes can be
         // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF0099DD)),
+        colorScheme: ColorScheme.fromSeed(seedColor: AppColors.primary),
         useMaterial3: true,
       ),
-      home: const HomePage(),
+      home: const SplashScreen(),
+    );
+  }
+}
+
+class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
+
+  @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> {
+  NativeAd? nativeAd;
+  RxBool nativeAdIsLoaded = false.obs; //testing
+
+  void loadNativeAd() {
+    nativeAd = NativeAd(
+        adUnitId: ApiUrl.nativeId,
+        listener: NativeAdListener(
+          onAdLoaded: (ad) {
+            debugPrint('👍👍👍👍👍$NativeAd loaded. 👍👍👍👍👍');
+            nativeAdIsLoaded.value = true;
+          },
+          onAdFailedToLoad: (ad, error) {
+            debugPrint('🔔🔔🔔🔔$ad failed to load: $error🔔🔔🔔🔔');
+            nativeAdIsLoaded.value = false;
+            ad.dispose();
+            nativeAd!.dispose();
+          },
+        ),
+        request: const AdRequest(),
+        // Styling...
+        nativeTemplateStyle: NativeTemplateStyle(
+          callToActionTextStyle: NativeTemplateTextStyle(
+            textColor: Colors.white,
+            backgroundColor: AppColors.primary,
+            style: NativeTemplateFontStyle.monospace,
+            size: 16.0,
+          ),
+          // Required: Choose a template.
+          templateType: TemplateType.medium,
+        ))
+      ..load();
+
+    nativeAd!.load();
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    loadNativeAd();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        centerTitle: true,
+        title: const Text("Photo editor",
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+            )),
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            Image.asset(
+              "asset/images/spalsh/spalsh_frame.jpg",
+            ),
+            const SizedBox(
+              height: 40,
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                GestureDetector(
+                  onTap: () => ShareData.shareApp(),
+                  child: Image.asset(
+                    "asset/images/spalsh/share.png",
+                    height: MediaQuery.of(context).size.width * .18,
+                    width: MediaQuery.of(context).size.width * .18,
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () => Get.to(const HomePage()),
+                  child: Image.asset(
+                    "asset/images/spalsh/play.png",
+                    height: MediaQuery.of(context).size.width * .18,
+                    width: MediaQuery.of(context).size.width * .18,
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () => ShareData.rateUS(),
+                  child: Image.asset(
+                    "asset/images/spalsh/rate.png",
+                    height: MediaQuery.of(context).size.width * .18,
+                    width: MediaQuery.of(context).size.width * .18,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(
+              height: 35,
+            ),
+            GestureDetector(
+              onTap: () => launchUrl(Uri.parse("http://1376.go.qureka.com")),
+              child: Image.asset(
+                "asset/images/spalsh/sponser.png",
+                height: MediaQuery.of(context).size.width * .2,
+              ),
+            ),
+            const SizedBox(
+              height: 35,
+            ),
+            Obx(() {
+              if (nativeAdIsLoaded.value) {
+                return SizedBox(height: 350, child: AdWidget(ad: nativeAd!));
+              } else {
+                return const Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Center(child: Text('*Ad is not loaded yet.*')),
+                  ],
+                );
+              }
+            }),
+          ],
+        ),
+      ),
     );
   }
 }

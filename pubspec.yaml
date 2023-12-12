@@ -49,6 +49,8 @@ dependencies:
   qr_flutter: ^4.1.0
   country_codes: ^2.2.0
   webview_flutter: ^4.4.2
+  google_mobile_ads: ^4.0.0
+  shimmer: ^3.0.0
 
 dev_dependencies:
   flutter_test:
@@ -76,6 +78,7 @@ flutter:
   assets:
     - asset/images/home/
     - asset/images/quote/
+    - asset/images/spalsh/
     - asset/json/frames.json
     - asset/json/caption_images.json
   # assets:

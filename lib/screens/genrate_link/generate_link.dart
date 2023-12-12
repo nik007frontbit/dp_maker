@@ -2,9 +2,13 @@ import 'package:country_code_picker/country_code_picker.dart';
 import 'package:country_codes/country_codes.dart';
 import 'package:dp_maker/screens/genrate_link/generated_link.dart';
 import 'package:dp_maker/utils/colors.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+import '../../ads/ads_manager.dart';
 
 class GenerateLink extends StatefulWidget {
   bool isDirect;
@@ -34,66 +38,126 @@ class _GenerateLinkState extends State<GenerateLink> {
     print(details.dialCode);
   }
 
+  NativeAd? nativeAd;
+  RxBool nativeAdIsLoaded = false.obs; //testing
+
+  void loadNativeAd() {
+    nativeAd = NativeAd(
+        adUnitId: ApiUrl.nativeId,
+        listener: NativeAdListener(
+          onAdLoaded: (ad) {
+            debugPrint('👍👍👍👍👍$NativeAd loaded. 👍👍👍👍👍');
+            nativeAdIsLoaded.value = true;
+          },
+          onAdFailedToLoad: (ad, error) {
+            debugPrint('🔔🔔🔔🔔$ad failed to load: $error🔔🔔🔔🔔');
+            nativeAdIsLoaded.value = false;
+            ad.dispose();
+            nativeAd!.dispose();
+          },
+        ),
+        request: const AdRequest(),
+        // Styling...
+        nativeTemplateStyle: NativeTemplateStyle(
+          callToActionTextStyle: NativeTemplateTextStyle(
+            textColor: Colors.white,
+            backgroundColor: AppColors.primary,
+            style: NativeTemplateFontStyle.monospace,
+            size: 16.0,
+          ),
+          // Required: Choose a template.
+          templateType: TemplateType.medium,
+        ))
+      ..load();
+
+    nativeAd!.load();
+  }
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     countryCode();
+    loadNativeAd();
   }
 
   // Default country code
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(
+        title: Text(
+          widget.isDirect == true ? "Direct Message" : "Generate Link",
+          style: const TextStyle(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        actions: [
+          GestureDetector(
+            onTap: () => launchUrl(Uri.parse("http://1376.go.qureka.com")),
+            child: const Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Icon(
+                CupertinoIcons.gift_fill,
+              ),
+            ),
+          )
+        ],
+      ),
       body: Form(
         key: _formKey,
         child: Padding(
-          padding: const EdgeInsets.all(20.0),
+          padding: const EdgeInsets.symmetric(horizontal: 20.0),
           child: SingleChildScrollView(
             child: Column(
               children: [
+                const SizedBox(
+                  height: 20,
+                ),
                 Obx(
-                  () => Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF3F3F3),
-                      borderRadius: BorderRadius.circular(5),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Stack(
-                            children: [
-                              const Positioned(
-                                  right: 10,
-                                  bottom: 10,
-                                  top: 10,
-                                  child: Icon(
-                                    Icons.keyboard_arrow_down_sharp,
-                                    color: Color(0xFF666666),
-                                  )),
-                              CountryCodePicker(
-                                onChanged: (value) {
-                                  _selectedCountryCode.value = value.dialCode!;
-                                  print(value.dialCode);
-                                },
-                                // Initial selection and favorite can be one of code ('IT') OR dial_code('+39')
-                                initialSelection: _selectedCountryCode.value,
-                                favorite: const ['+39', 'FR', '+91'],
-                                // optional. Shows only country name and flag
-                                showCountryOnly: false,
-                                // optional. Shows only country name and flag when popup is closed.
-                                showOnlyCountryWhenClosed: false,
-
-                                // optional. aligns the flag and the Text left
-                                alignLeft: true,
-                              ),
-                            ],
-                          ),
+                      () =>
+                      Container(
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF3F3F3),
+                          borderRadius: BorderRadius.circular(5),
                         ),
-                      ],
-                    ),
-                  ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Stack(
+                                children: [
+                                  const Positioned(
+                                      right: 10,
+                                      bottom: 10,
+                                      top: 10,
+                                      child: Icon(
+                                        Icons.keyboard_arrow_down_sharp,
+                                        color: Color(0xFF666666),
+                                      )),
+                                  CountryCodePicker(
+                                    onChanged: (value) {
+                                      _selectedCountryCode.value =
+                                      value.dialCode!;
+                                      print(value.dialCode);
+                                    },
+                                    // Initial selection and favorite can be one of code ('IT') OR dial_code('+39')
+                                    initialSelection: _selectedCountryCode
+                                        .value,
+                                    favorite: const ['+39', 'FR', '+91'],
+                                    // optional. Shows only country name and flag
+                                    showCountryOnly: false,
+                                    // optional. Shows only country name and flag when popup is closed.
+                                    showOnlyCountryWhenClosed: false,
+
+                                    // optional. aligns the flag and the Text left
+                                    alignLeft: true,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                 ),
                 const SizedBox(
                   height: 20,
@@ -207,19 +271,25 @@ class _GenerateLinkState extends State<GenerateLink> {
                     if (_formKey.currentState!.validate()) {
                       if (widget.isDirect == false) {
                         print(
-                            "${_selectedCountryCode.value}${_phoneNumberController.text}");
+                            "${_selectedCountryCode
+                                .value}${_phoneNumberController.text}");
                         Get.to(GeneratedLink(
                             phone:
-                                "${_selectedCountryCode.value}${_phoneNumberController.text}",
+                            "${_selectedCountryCode
+                                .value}${_phoneNumberController.text}",
                             text: _messageController.text));
                       } else {
                         try {
                           await launchUrl(Uri.parse(
-                              '''https://wa.me/${_selectedCountryCode.value}${_phoneNumberController.text}?text=${_messageController.text}'''));
+                              '''https://wa.me/${_selectedCountryCode
+                                  .value}${_phoneNumberController
+                                  .text}?text=${_messageController.text}'''));
                         } catch (e) {
                           Get.snackbar(
                             'Could not launch something went wrong',
-                            '''https://wa.me/${_selectedCountryCode.value}${_phoneNumberController.text}?text=${_messageController.text}''',
+                            '''https://wa.me/${_selectedCountryCode
+                                .value}${_phoneNumberController
+                                .text}?text=${_messageController.text}''',
                             snackPosition: SnackPosition.BOTTOM,
                           );
                         }
@@ -246,6 +316,20 @@ class _GenerateLinkState extends State<GenerateLink> {
                     ),
                   ),
                 ),
+                Obx(() {
+                  if (nativeAdIsLoaded.value) {
+                    return SizedBox(
+                        height: 350, child: AdWidget(ad: nativeAd!));
+                  } else {
+                    return const Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Center(child: Text('*Ad is not loaded yet.*')),
+                      ],
+                    );
+                  }
+                }),
               ],
             ),
           ),

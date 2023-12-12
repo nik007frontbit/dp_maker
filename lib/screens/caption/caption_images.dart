@@ -1,7 +1,9 @@
 import 'package:dp_maker/main.dart';
 import 'package:dp_maker/screens/caption/cap_image_show.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class CaptionImagesShow extends StatelessWidget {
   const CaptionImagesShow({super.key});
@@ -9,7 +11,25 @@ class CaptionImagesShow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(
+        title: const Text(
+          "Image & Caption",
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        actions: [
+          GestureDetector(
+            onTap: () => launchUrl(Uri.parse("http://1376.go.qureka.com")),
+            child: const Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Icon(
+                CupertinoIcons.gift_fill,
+              ),
+            ),
+          )
+        ],
+      ),
       body: GridView.builder(
         padding: const EdgeInsets.all(15),
         itemCount: dataImages.length,
