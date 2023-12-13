@@ -6,15 +6,67 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class GeneratedLink extends StatelessWidget {
+import '../../ads/ads_manager.dart';
+
+class GeneratedLink extends StatefulWidget {
   String phone;
   String text;
 
   GeneratedLink({super.key, required this.phone, required this.text});
+
+  @override
+  State<GeneratedLink> createState() => _GeneratedLinkState();
+}
+
+class _GeneratedLinkState extends State<GeneratedLink> {
+  NativeAd? nativeAd;
+  RxBool nativeAdIsLoaded = false.obs; //testing
+
+  void loadNativeAd() {
+    nativeAd = NativeAd(
+        adUnitId: ApiUrl.nativeId,
+        listener: NativeAdListener(
+          onAdLoaded: (ad) {
+            debugPrint('👍👍👍👍👍$NativeAd loaded. 👍👍👍👍👍');
+            nativeAdIsLoaded.value = true;
+          },
+          onAdFailedToLoad: (ad, error) {
+            debugPrint('🔔🔔🔔🔔$ad failed to load: $error🔔🔔🔔🔔');
+            nativeAdIsLoaded.value = false;
+            ad.dispose();
+            nativeAd!.dispose();
+          },
+        ),
+        request: const AdRequest(),
+        // Styling...
+        nativeTemplateStyle: NativeTemplateStyle(
+          cornerRadius: 5,
+          mainBackgroundColor: AppColors.grey,
+          callToActionTextStyle: NativeTemplateTextStyle(
+            textColor: Colors.white,
+            backgroundColor: AppColors.primary,
+            style: NativeTemplateFontStyle.monospace,
+            size: 16.0,
+          ),
+          // Required: Choose a template.
+          templateType: TemplateType.medium,
+        ))
+      ..load();
+
+    nativeAd!.load();
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    loadNativeAd();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +91,7 @@ class GeneratedLink extends StatelessWidget {
         ],
       ),
       body: Padding(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.symmetric(horizontal: 20.0),
         child: Column(
           children: [
             Container(
@@ -66,7 +118,7 @@ class GeneratedLink extends StatelessWidget {
                     height: 15,
                   ),
                   Text(
-                    '''https://wa.me/$phone?text=$text''',
+                    '''https://wa.me/${widget.phone}?text=${widget.text}''',
                     style: const TextStyle(
                       fontWeight: FontWeight.w400,
                       color: Color(0xFF3366CC),
@@ -81,9 +133,9 @@ class GeneratedLink extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
                       GestureDetector(
-                        onTap: () async => await Clipboard.setData(
-                            ClipboardData(
-                                text: '''https://wa.me/$phone?text=$text''')),
+                        onTap: () async => await Clipboard.setData(ClipboardData(
+                            text:
+                                '''https://wa.me/${widget.phone}?text=${widget.text}''')),
                         child: const Row(
                           children: [
                             Icon(
@@ -107,7 +159,8 @@ class GeneratedLink extends StatelessWidget {
                       ),
                       GestureDetector(
                         onTap: () => ShareData.shareLink(
-                          link: '''https://wa.me/$phone?text=$text''',
+                          link:
+                              '''https://wa.me/${widget.phone}?text=${widget.text}''',
                         ),
                         child: const Row(
                           children: [
@@ -135,10 +188,31 @@ class GeneratedLink extends StatelessWidget {
                 ],
               ),
             ),
+            Obx(() {
+              if (nativeAdIsLoaded.value) {
+                return Container(
+                    decoration: BoxDecoration(
+                        color: AppColors.grey,
+                        borderRadius: BorderRadius.circular(5)),
+                    height: 350,
+                    child: ClipRRect(
+                        borderRadius: BorderRadius.circular(5),
+                        child: AdWidget(ad: nativeAd!)));
+              } else {
+                return const Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Center(child: Text('*Ad is not loaded yet.*')),
+                  ],
+                );
+              }
+            }),
             GestureDetector(
               onTap: () {
-                Get.to(QrCodeScreen(
-                    qrData: '''https://wa.me/$phone?text=$text'''));
+                AdsManager.showInterstitialAd(() => Get.to(QrCodeScreen(
+                    qrData:
+                        '''https://wa.me/${widget.phone}?text=${widget.text}''')));
               },
               child: Container(
                 margin: const EdgeInsets.all(50),
@@ -165,11 +239,59 @@ class GeneratedLink extends StatelessWidget {
   }
 }
 
-class QrCodeScreen extends StatelessWidget {
+class QrCodeScreen extends StatefulWidget {
   final String qrData;
-  final ScreenshotController screenshotController = ScreenshotController();
 
   QrCodeScreen({super.key, required this.qrData});
+
+  @override
+  State<QrCodeScreen> createState() => _QrCodeScreenState();
+}
+
+class _QrCodeScreenState extends State<QrCodeScreen> {
+  NativeAd? nativeAd;
+  RxBool nativeAdIsLoaded = false.obs; //testing
+
+  void loadNativeAd() {
+    nativeAd = NativeAd(
+        adUnitId: ApiUrl.nativeId,
+        listener: NativeAdListener(
+          onAdLoaded: (ad) {
+            debugPrint('👍👍👍👍👍$NativeAd loaded. 👍👍👍👍👍');
+            nativeAdIsLoaded.value = true;
+          },
+          onAdFailedToLoad: (ad, error) {
+            debugPrint('🔔🔔🔔🔔$ad failed to load: $error🔔🔔🔔🔔');
+            nativeAdIsLoaded.value = false;
+            ad.dispose();
+            nativeAd!.dispose();
+          },
+        ),
+        request: const AdRequest(),
+        // Styling...
+        nativeTemplateStyle: NativeTemplateStyle(
+          callToActionTextStyle: NativeTemplateTextStyle(
+            textColor: Colors.white,
+            backgroundColor: AppColors.primary,
+            style: NativeTemplateFontStyle.monospace,
+            size: 16.0,
+          ),
+          // Required: Choose a template.
+          templateType: TemplateType.medium,
+        ))
+      ..load();
+
+    nativeAd!.load();
+  }
+
+  final ScreenshotController screenshotController = ScreenshotController();
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    loadNativeAd();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -194,54 +316,77 @@ class QrCodeScreen extends StatelessWidget {
         ],
       ),
       body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            const Center(
-              child: Padding(
-                padding: EdgeInsets.all(20.0),
-                child: Text(
-                  "Scan this QR code and start Chat",
-                  style: TextStyle(
-                    fontWeight: FontWeight.w500,
-                    color: Color(0xFF1C1C1E),
-                    fontSize: 22,
+        padding: const EdgeInsets.symmetric(horizontal: 20.0),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(20.0),
+                  child: Text(
+                    "Scan this QR code and start Chat",
+                    style: TextStyle(
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xFF1C1C1E),
+                      fontSize: 22,
+                    ),
                   ),
                 ),
               ),
-            ),
-            Screenshot(
-              controller: screenshotController,
-              child: QrImageView(
-                data: qrData,
-                backgroundColor: Colors.white,
-                version: QrVersions.auto,
-                size: MediaQuery.of(context).size.width * .8,
-                gapless: false,
-              ),
-            ),
-            GestureDetector(
-              onTap: () => takePicture(),
-              child: Container(
-                margin: const EdgeInsets.all(50),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 30,
-                  vertical: 13,
-                ),
-                decoration: BoxDecoration(
-                    border: Border.all(color: AppColors.primary),
-                    borderRadius: BorderRadius.circular(40)),
-                child: const Text(
-                  "Generate QR Code",
-                  style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 18,
-                      color: AppColors.primary),
+              Screenshot(
+                controller: screenshotController,
+                child: QrImageView(
+                  data: widget.qrData,
+                  backgroundColor: Colors.white,
+                  version: QrVersions.auto,
+                  size: MediaQuery.of(context).size.width * .8,
+                  gapless: false,
                 ),
               ),
-            ),
-          ],
+              const SizedBox(
+                height: 15,
+              ),
+              Obx(() {
+                if (nativeAdIsLoaded.value) {
+                  return Container(
+                      height: 350,
+                      margin: const EdgeInsets.only(
+                        bottom: 20,
+                      ),
+                      child: AdWidget(ad: nativeAd!));
+                } else {
+                  return const Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Center(child: Text('*Ad is not loaded yet.*')),
+                    ],
+                  );
+                }
+              }),
+              GestureDetector(
+                onTap: () => AdsManager.showInterstitialAd(() => takePicture()),
+                child: Container(
+                  margin: const EdgeInsets.all(30),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 30,
+                    vertical: 13,
+                  ),
+                  decoration: BoxDecoration(
+                      border: Border.all(color: AppColors.primary),
+                      borderRadius: BorderRadius.circular(40)),
+                  child: const Text(
+                    "Generate QR Code",
+                    style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 18,
+                        color: AppColors.primary),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
