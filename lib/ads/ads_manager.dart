@@ -5,15 +5,15 @@ import 'package:get/get.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 
-class ApiUrl {/*
+class ApiUrl {
   static String bannerId = 'ca-app-pub-4262674141420804/3730354262';
   static String interstialId = 'ca-app-pub-4262674141420804/4687432461';
   static String nativeId = 'ca-app-pub-4262674141420804/9992510283';
-  static String appId = 'ca-app-pub-4262674141420804/7968982173';*/
+  static String appId = 'ca-app-pub-4262674141420804/7968982173';/*
   static String bannerId = 'ca-app-pub-3940256099942544/6300978111';
   static String interstialId = 'ca-app-pub-3940256099942544/1033173712';
   static String nativeId = 'ca-app-pub-3940256099942544/2247696110';
-  static String appId = 'ca-app-pub-3940256099942544/9257395921';
+  static String appId = 'ca-app-pub-3940256099942544/9257395921';*/
 }
 
 class AdsManager {

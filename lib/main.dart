@@ -2,7 +2,9 @@ import 'dart:convert';
 
 import 'package:dp_maker/screens/home.dart';
 import 'package:dp_maker/utils/colors.dart';
+import 'package:dp_maker/utils/connectivity.dart';
 import 'package:dp_maker/utils/share.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -40,6 +42,7 @@ Future<void> main() async {
   await MobileAds.instance.initialize();
 
   AdsManager.loadAppOpenAd();
+  AdsManager.initInterstitialAd();
   await loader();
 
   runApp(const MyApp());
@@ -53,6 +56,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return GetMaterialApp(
       title: 'Dp Generator',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         // This is the theme of your application.
         //
@@ -72,6 +76,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: AppColors.primary),
         useMaterial3: true,
       ),
+      initialBinding: PermissionBinding(),
       home: const SplashScreen(),
     );
   }
@@ -129,79 +134,118 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        title: const Text("Photo editor",
-            style: TextStyle(
-              fontWeight: FontWeight.w700,
-            )),
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            Image.asset(
-              "asset/images/spalsh/spalsh_frame.jpg",
-            ),
-            const SizedBox(
-              height: 40,
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                GestureDetector(
-                  onTap: () => ShareData.shareApp(),
-                  child: Image.asset(
-                    "asset/images/spalsh/share.png",
-                    height: MediaQuery.of(context).size.width * .18,
-                    width: MediaQuery.of(context).size.width * .18,
+    return WillPopScope(
+      onWillPop: () async {
+        bool backWill = false;
+        await showCupertinoDialog(
+          context: context,
+          builder: (context) => CupertinoAlertDialog(
+            title: const Text("Are You Sure To Exit?"),
+            actions: [
+              CupertinoDialogAction(
+                onPressed: () {
+                  backWill = true;
+                  Get.back();
+                },
+                child: const Text(
+                  "Yes",
+                  style: TextStyle(
+                    color: Color(0xFF06214D),
                   ),
                 ),
-                GestureDetector(
-                  onTap: () => Get.to(const HomePage()),
-                  child: Image.asset(
-                    "asset/images/spalsh/play.png",
-                    height: MediaQuery.of(context).size.width * .18,
-                    width: MediaQuery.of(context).size.width * .18,
-                  ),
-                ),
-                GestureDetector(
-                  onTap: () => ShareData.rateUS(),
-                  child: Image.asset(
-                    "asset/images/spalsh/rate.png",
-                    height: MediaQuery.of(context).size.width * .18,
-                    width: MediaQuery.of(context).size.width * .18,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(
-              height: 35,
-            ),
-            GestureDetector(
-              onTap: () => launchUrl(Uri.parse("http://1376.go.qureka.com")),
-              child: Image.asset(
-                "asset/images/spalsh/sponser.png",
-                height: MediaQuery.of(context).size.width * .2,
               ),
-            ),
-            const SizedBox(
-              height: 35,
-            ),
-            Obx(() {
-              if (nativeAdIsLoaded.value) {
-                return SizedBox(height: 350, child: AdWidget(ad: nativeAd!));
-              } else {
-                return const Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Center(child: Text('*Ad is not loaded yet.*')),
-                  ],
-                );
-              }
-            }),
-          ],
+              CupertinoDialogAction(
+                onPressed: () {
+                  backWill = false;
+                  Get.back();
+                },
+                child: const Text(
+                  "No",
+                  style: TextStyle(
+                    color: Color(0xFFFE9F57),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+        return backWill;
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          centerTitle: true,
+          title: const Text("Photo editor",
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+              )),
+        ),
+        body: SingleChildScrollView(
+          child: Column(
+            children: [
+              Image.asset(
+                "asset/images/spalsh/spalsh_frame.jpg",
+              ),
+              const SizedBox(
+                height: 40,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  GestureDetector(
+                    onTap: () => ShareData.shareApp(),
+                    child: Image.asset(
+                      "asset/images/spalsh/share.png",
+                      height: MediaQuery.of(context).size.width * .18,
+                      width: MediaQuery.of(context).size.width * .18,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => AdsManager.showInterstitialAd(
+                        () => Get.to(const HomePage())),
+                    child: Image.asset(
+                      "asset/images/spalsh/play.png",
+                      height: MediaQuery.of(context).size.width * .18,
+                      width: MediaQuery.of(context).size.width * .18,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => ShareData.rateUS(),
+                    child: Image.asset(
+                      "asset/images/spalsh/rate.png",
+                      height: MediaQuery.of(context).size.width * .18,
+                      width: MediaQuery.of(context).size.width * .18,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(
+                height: 35,
+              ),
+              GestureDetector(
+                onTap: () => launchUrl(Uri.parse("http://1376.go.qureka.com")),
+                child: Image.asset(
+                  "asset/images/spalsh/sponser.png",
+                  height: MediaQuery.of(context).size.width * .2,
+                ),
+              ),
+              const SizedBox(
+                height: 35,
+              ),
+              Obx(() {
+                if (nativeAdIsLoaded.value) {
+                  return SizedBox(height: 350, child: AdWidget(ad: nativeAd!));
+                } else {
+                  return const Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Center(child: Text('*Ad is not loaded yet.*')),
+                    ],
+                  );
+                }
+              }),
+            ],
+          ),
         ),
       ),
     );

@@ -59,6 +59,8 @@ class _GenerateLinkState extends State<GenerateLink> {
         request: const AdRequest(),
         // Styling...
         nativeTemplateStyle: NativeTemplateStyle(
+          cornerRadius: 5,
+          mainBackgroundColor: AppColors.grey,
           callToActionTextStyle: NativeTemplateTextStyle(
             textColor: Colors.white,
             backgroundColor: AppColors.primary,
@@ -115,49 +117,46 @@ class _GenerateLinkState extends State<GenerateLink> {
                   height: 20,
                 ),
                 Obx(
-                      () =>
-                      Container(
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF3F3F3),
-                          borderRadius: BorderRadius.circular(5),
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Stack(
-                                children: [
-                                  const Positioned(
-                                      right: 10,
-                                      bottom: 10,
-                                      top: 10,
-                                      child: Icon(
-                                        Icons.keyboard_arrow_down_sharp,
-                                        color: Color(0xFF666666),
-                                      )),
-                                  CountryCodePicker(
-                                    onChanged: (value) {
-                                      _selectedCountryCode.value =
-                                      value.dialCode!;
-                                      print(value.dialCode);
-                                    },
-                                    // Initial selection and favorite can be one of code ('IT') OR dial_code('+39')
-                                    initialSelection: _selectedCountryCode
-                                        .value,
-                                    favorite: const ['+39', 'FR', '+91'],
-                                    // optional. Shows only country name and flag
-                                    showCountryOnly: false,
-                                    // optional. Shows only country name and flag when popup is closed.
-                                    showOnlyCountryWhenClosed: false,
+                  () => Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF3F3F3),
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Stack(
+                            children: [
+                              const Positioned(
+                                  right: 10,
+                                  bottom: 10,
+                                  top: 10,
+                                  child: Icon(
+                                    Icons.keyboard_arrow_down_sharp,
+                                    color: Color(0xFF666666),
+                                  )),
+                              CountryCodePicker(
+                                onChanged: (value) {
+                                  _selectedCountryCode.value = value.dialCode!;
+                                  print(value.dialCode);
+                                },
+                                // Initial selection and favorite can be one of code ('IT') OR dial_code('+39')
+                                initialSelection: _selectedCountryCode.value,
+                                favorite: const ['+39', 'FR', '+91'],
+                                // optional. Shows only country name and flag
+                                showCountryOnly: false,
+                                // optional. Shows only country name and flag when popup is closed.
+                                showOnlyCountryWhenClosed: false,
 
-                                    // optional. aligns the flag and the Text left
-                                    alignLeft: true,
-                                  ),
-                                ],
+                                // optional. aligns the flag and the Text left
+                                alignLeft: true,
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
+                      ],
+                    ),
+                  ),
                 ),
                 const SizedBox(
                   height: 20,
@@ -265,31 +264,49 @@ class _GenerateLinkState extends State<GenerateLink> {
                   ),
                   maxLines: 4,
                 ),
+                const SizedBox(
+                  height: 20,
+                ),
+                Obx(() {
+                  if (nativeAdIsLoaded.value) {
+                    return Container(
+                        decoration: BoxDecoration(
+                            color: AppColors.grey,
+                            borderRadius: BorderRadius.circular(5)),
+                        height: 350,
+                        child: ClipRRect(
+                            borderRadius: BorderRadius.circular(5),
+                            child: AdWidget(ad: nativeAd!)));
+                  } else {
+                    return const Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Center(child: Text('*Ad is not loaded yet.*')),
+                      ],
+                    );
+                  }
+                }),
                 GestureDetector(
                   onTap: () async {
                     FocusManager.instance.primaryFocus?.unfocus();
                     if (_formKey.currentState!.validate()) {
                       if (widget.isDirect == false) {
                         print(
-                            "${_selectedCountryCode
-                                .value}${_phoneNumberController.text}");
-                        Get.to(GeneratedLink(
+                            "${_selectedCountryCode.value}${_phoneNumberController.text}");
+                        AdsManager.showInterstitialAd(() => Get.to(GeneratedLink(
                             phone:
-                            "${_selectedCountryCode
-                                .value}${_phoneNumberController.text}",
-                            text: _messageController.text));
+                                "${_selectedCountryCode.value}${_phoneNumberController.text}",
+                            text: _messageController.text)));
                       } else {
                         try {
-                          await launchUrl(Uri.parse(
-                              '''https://wa.me/${_selectedCountryCode
-                                  .value}${_phoneNumberController
-                                  .text}?text=${_messageController.text}'''));
+                          AdsManager.showInterstitialAd(() async =>
+                              await launchUrl(Uri.parse(
+                                  '''https://wa.me/${_selectedCountryCode.value}${_phoneNumberController.text}?text=${_messageController.text}''')));
                         } catch (e) {
                           Get.snackbar(
                             'Could not launch something went wrong',
-                            '''https://wa.me/${_selectedCountryCode
-                                .value}${_phoneNumberController
-                                .text}?text=${_messageController.text}''',
+                            '''https://wa.me/${_selectedCountryCode.value}${_phoneNumberController.text}?text=${_messageController.text}''',
                             snackPosition: SnackPosition.BOTTOM,
                           );
                         }
@@ -316,20 +333,6 @@ class _GenerateLinkState extends State<GenerateLink> {
                     ),
                   ),
                 ),
-                Obx(() {
-                  if (nativeAdIsLoaded.value) {
-                    return SizedBox(
-                        height: 350, child: AdWidget(ad: nativeAd!));
-                  } else {
-                    return const Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Center(child: Text('*Ad is not loaded yet.*')),
-                      ],
-                    );
-                  }
-                }),
               ],
             ),
           ),

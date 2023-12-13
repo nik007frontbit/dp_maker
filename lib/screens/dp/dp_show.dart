@@ -141,10 +141,12 @@ class _DpShowListState extends State<DpShowList> {
                             itemBuilder: (context, i) {
                               data = dataFrames[index]['image'][i];
                               return GestureDetector(
-                                onTap: () => Get.to(() => DpDownloadPage(
-                                      indexImage: i.obs,
-                                      images: dataFrames[index]['image'],
-                                    )),
+                                onTap: () => AdsManager.showInterstitialAd(
+                                  () => Get.to(() => DpDownloadPage(
+                                        indexImage: i.obs,
+                                        images: dataFrames[index]['image'],
+                                      )),
+                                ),
                                 child: Container(
                                   color: Colors.grey.withOpacity(0.2),
                                   child: Image.network(

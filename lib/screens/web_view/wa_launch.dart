@@ -1,7 +1,13 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+
+import '../../ads/ads_manager.dart';
+import '../../utils/colors.dart';
 
 // ignore: must_be_immutable
 class WebViewLoad extends StatefulWidget {
@@ -16,11 +22,46 @@ class WebViewLoad extends StatefulWidget {
 
 class WebViewLoadUI extends State<WebViewLoad> {
   var controller;
+  NativeAd? nativeAd;
+  RxBool nativeAdIsLoaded = false.obs; //testing
+
+  void loadNativeAd() {
+    nativeAd = NativeAd(
+        adUnitId: ApiUrl.nativeId,
+        listener: NativeAdListener(
+          onAdLoaded: (ad) {
+            debugPrint('👍👍👍👍👍$NativeAd loaded. 👍👍👍👍👍');
+            nativeAdIsLoaded.value = true;
+          },
+          onAdFailedToLoad: (ad, error) {
+            debugPrint('🔔🔔🔔🔔$ad failed to load: $error🔔🔔🔔🔔');
+            nativeAdIsLoaded.value = false;
+            ad.dispose();
+            nativeAd!.dispose();
+          },
+        ),
+        request: const AdRequest(),
+        // Styling...
+        nativeTemplateStyle: NativeTemplateStyle(
+          callToActionTextStyle: NativeTemplateTextStyle(
+            textColor: Colors.white,
+            backgroundColor: AppColors.primary,
+            style: NativeTemplateFontStyle.monospace,
+            size: 16.0,
+          ),
+          // Required: Choose a template.
+          templateType: TemplateType.small,
+        ))
+      ..load();
+
+    nativeAd!.load();
+  }
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    loadNativeAd();
     controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(const Color(0x00000000))
@@ -48,28 +89,59 @@ class WebViewLoadUI extends State<WebViewLoad> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          title: Text(
-            widget.title,
-            style: const TextStyle(
-              fontWeight: FontWeight.w600,
-            ),
+      appBar: AppBar(
+        title: Text(
+          widget.title,
+          style: const TextStyle(
+            fontWeight: FontWeight.w600,
           ),
-          actions: [
-            GestureDetector(
-              onTap: () => launchUrl(Uri.parse("http://1376.go.qureka.com")),
-              child: const Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Icon(
-                  CupertinoIcons.gift_fill,
+        ),
+        actions: [
+          GestureDetector(
+            onTap: () => launchUrl(Uri.parse("http://1376.go.qureka.com")),
+            child: const Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Icon(
+                CupertinoIcons.gift_fill,
+              ),
+            ),
+          )
+        ],
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+      ),
+      body: WebViewWidget(
+        controller: controller,
+      ),
+      bottomNavigationBar: Obx(() {
+        if (nativeAdIsLoaded.value) {
+          return SizedBox(
+            height: 72,
+            child: AdWidget(ad: nativeAd!),
+          );
+        } else {
+          return Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Shimmer.fromColors(
+                baseColor: Colors.grey[300]!,
+                highlightColor: Colors.grey[100]!,
+                child: Container(
+                  width: double.infinity,
+                  height: 72,
+                  color: Colors.white,
                 ),
               ),
-            )
-          ],
-          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        ),
-        body: WebViewWidget(
-          controller: controller,
-        ));
+              /*
+              SizedBox(height: 20),
+              Text(
+                'Fetching an interesting ad for you...',
+                style: TextStyle(fontSize: 16),
+              ),*/
+            ],
+          );
+        }
+      }),
+    );
   }
 }

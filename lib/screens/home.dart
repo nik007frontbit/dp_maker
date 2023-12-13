@@ -41,6 +41,8 @@ class _HomePageState extends State<HomePage> {
         request: const AdRequest(),
         // Styling...
         nativeTemplateStyle: NativeTemplateStyle(
+          tertiaryTextStyle: NativeTemplateTextStyle(textColor: Colors.black),
+          mainBackgroundColor: const Color(0xFFE2E1FD),
           callToActionTextStyle: NativeTemplateTextStyle(
             textColor: Colors.white,
             backgroundColor: AppColors.primary,
@@ -66,6 +68,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: const SizedBox(),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         title: const Text("Dp Maker",
@@ -97,7 +100,8 @@ class _HomePageState extends State<HomePage> {
                     child: pagesIcon(
                         height: MediaQuery.of(context).size.width * .4,
                         image: "asset/images/home/dp.png",
-                        ontap: () => Get.to(const DpShowList())),
+                        ontap: () => AdsManager.showInterstitialAd(
+                            () => Get.to(const DpShowList()))),
                   ),
                   SizedBox(
                     width: MediaQuery.of(context).size.width * .03,
@@ -106,7 +110,8 @@ class _HomePageState extends State<HomePage> {
                     child: pagesIcon(
                       height: MediaQuery.of(context).size.width * .4,
                       image: "asset/images/home/cap.png",
-                      ontap: () => Get.to(const CaptionImagesShow()),
+                      ontap: () => AdsManager.showInterstitialAd(
+                          () => Get.to(const CaptionImagesShow())),
                     ),
                   ),
                 ],
@@ -117,7 +122,8 @@ class _HomePageState extends State<HomePage> {
                     child: pagesIcon(
                         height: MediaQuery.of(context).size.width * .3,
                         image: "asset/images/home/direct.png",
-                        ontap: () => Get.to(GenerateLink(isDirect: true))),
+                        ontap: () => AdsManager.showInterstitialAd(
+                            () => Get.to(GenerateLink(isDirect: true)))),
                   ),
                   SizedBox(
                     width: MediaQuery.of(context).size.width * .03,
@@ -126,16 +132,50 @@ class _HomePageState extends State<HomePage> {
                     child: pagesIcon(
                       height: MediaQuery.of(context).size.width * .3,
                       image: "asset/images/home/genLink.png",
-                      ontap: () => Get.to(GenerateLink(isDirect: false)),
+                      ontap: () => AdsManager.showInterstitialAd(
+                          () => Get.to(GenerateLink(isDirect: false))),
                     ),
                   ),
                 ],
               ),
               pagesIcon(
-                ontap: () => Get.to(WebViewLoad(
-                    title: "Whatsapp web", url: "https://web.whatsapp.com")),
+                ontap: () => AdsManager.showInterstitialAd(
+                  () => Get.to(WebViewLoad(
+                      title: "Whatsapp web", url: "https://web.whatsapp.com")),
+                ),
                 height: MediaQuery.of(context).size.width * .4,
                 image: "asset/images/home/waWeb.png",
+              ),
+              const SizedBox(
+                height: 10,
+              ),
+              Obx(() {
+                if (nativeAdIsLoaded.value) {
+                  return Container(
+                      height: 350,
+                      margin: const EdgeInsets.only(
+                        bottom: 20,
+                      ),
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: AppColors.primary.withOpacity(0.5),
+                          )),
+                      child: ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: AdWidget(ad: nativeAd!)));
+                } else {
+                  return const Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Center(child: Text('*Ad is not loaded yet.*')),
+                    ],
+                  );
+                }
+              }),
+              const SizedBox(
+                height: 10,
               ),
               Row(
                 children: [
@@ -159,21 +199,8 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
               const SizedBox(
-                height: 35,
+                height: 20,
               ),
-              Obx(() {
-                if (nativeAdIsLoaded.value) {
-                  return SizedBox(height: 350, child: AdWidget(ad: nativeAd!));
-                } else {
-                  return const Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Center(child: Text('*Ad is not loaded yet.*')),
-                    ],
-                  );
-                }
-              }),
             ],
           ),
         ),
